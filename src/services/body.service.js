@@ -1,20 +1,23 @@
 import { Particle, Circle, Pt, Num, Line, Group } from "pts";
 import { addToWorld, space, edges, form } from "./world.service";
-import { allCircles } from "./game.service";
+import { allCircles, launchCircle } from "./game.service";
 
 const CIRCLE_MASS = 1;
 const DIST_OFFSET = 15;
 
+function getCircles(){
+    return allCircles.concat(launchCircle ? launchCircle : []);
+}
 
-function getRandomPoint(){
+function getRandomPoint(position = {}){
+
     const point = new Pt({
-        x: Num.randomRange(DIST_OFFSET, space.size.x - DIST_OFFSET),
-        y: Num.randomRange(DIST_OFFSET, space.size.y - DIST_OFFSET)
+        x: position.x || Num.randomRange(DIST_OFFSET, space.size.x - DIST_OFFSET),
+        y: position.y || Num.randomRange(DIST_OFFSET, space.size.y - DIST_OFFSET)
     });
 
 
-    const isInAnotherCircle = allCircles.some((circle) => {
-
+    const isInAnotherCircle = getCircles().some((circle) => {
         const circleWithBorder = Circle.fromCenter(circle.point, circle.particle.radius);
 
         const isWithin = Circle.withinBound(circleWithBorder, point);
@@ -39,7 +42,7 @@ function getClosestDistance(pt){
 
     const edgeDistances = edges.map((edge) => Line.distanceFromPt(edge, pt));
 
-    const circleDistances = allCircles.map((circle) => {
+    const circleDistances = getCircles().map((circle) => {
 
         const lineFromCircleToPt = new Group(circle.point, pt);
         window.lineFrom = lineFromCircleToPt;
@@ -53,9 +56,9 @@ function getClosestDistance(pt){
         return dist;
     });
 
-    const closest = edgeDistances.concat(circleDistances).sort((a, b) => a - b);
+    const closest = edgeDistances.concat(circleDistances).sort((a, b) => a - b)[0];
 
-    return closest[0];
+    return closest;
 }
 
 const colors = ["ffa630","6124d4","90d909","db3b53","66d7d1"];
@@ -65,19 +68,23 @@ function getRandomColor(idx){
 
 function getRandomArbitrary(min, max) {
     return Math.random() * (max - min) + min;
-  }
+}
 
-export function createCircle(hitPoints){
+export function createCircle(hitPoints, reqRadius, props){
 
-    const point = getRandomPoint();
+    const point = getRandomPoint(props && props.position);
 
-    const radius = getClosestDistance(point);
+    const radius = reqRadius || getClosestDistance(point);
+
+    if(radius <= 15){
+        return createCircle(hitPoints, reqRadius, props);
+    }
 
     const circle = Circle.fromCenter(point, radius);
 
     const particle = createParticle(point, radius);
 
-    const color = getRandomColor(hitPoints);
+    const color = props && props.color || getRandomColor(hitPoints);
 
     const rotation = getRandomArbitrary(-30, 30);
     addToWorld(particle);
