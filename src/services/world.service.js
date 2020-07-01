@@ -1,5 +1,5 @@
 import { CanvasSpace, World, Line, Pt, Group, Rectangle, Geom, Circle } from "pts";
-import { gameInit, allCircles } from './game.service';
+import { gameInit, allCircles, launchCircle } from './game.service';
 
 export let space, form, world, edges;
 
@@ -34,6 +34,7 @@ export function worldInit(){
         },
         animate: (time, fTime) => {
 
+            form.strokeOnly(launchCircle.render.color, launchCircle.width).point(launchCircle.point, launchCircle.radius, 'circle');
 
             allCircles.forEach((circle, i) => {
 
