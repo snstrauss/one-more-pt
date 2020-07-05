@@ -1,5 +1,6 @@
 import { CanvasSpace, World, Line, Pt, Group, Rectangle, Geom, Circle } from "pts";
 import { gameInit, allCircles, launchCircle } from './game.service';
+import { renderLaunchCircle, renderCircles, renderLauncherGuide } from "./renderers.service";
 
 export let space, form, world, edges;
 
@@ -17,16 +18,11 @@ export function worldInit(){
 
             const { x, y } = space.size;
 
-            const topEdge = Group.fromArray([[0, 0], [x, 0]]);
-            const bottomEdge = Group.fromArray([[0, y], [x, y]]);
-            const leftEdge = Group.fromArray([[0,0], [0, y]]);
-            const rightEdge = Group.fromArray([[x,0], [x,y]]);
-
             edges = [
-                topEdge,
-                bottomEdge,
-                leftEdge,
-                rightEdge
+                createEdgeObject('top', [[0, 0], [x, 0]]),
+                createEdgeObject('bottom', [[0, y], [x, y]]),
+                createEdgeObject('left', [[0,0], [0, y]]),
+                createEdgeObject('right', [[x,0], [x,y]])
             ];
 
             world = new World(space.innerBound, 0.95, 0);
@@ -34,36 +30,33 @@ export function worldInit(){
         },
         animate: (time, fTime) => {
 
-            form.strokeOnly(launchCircle.render.color, launchCircle.width).point(launchCircle.point, launchCircle.radius, 'circle');
+            renderLaunchCircle();
+            renderCircles();
 
-            allCircles.forEach((circle, i) => {
 
-                let { color } = circle.render;
+            Object.values(edges).forEach(edge => {
+                form.strokeOnly('red', 5).line(edge.line);
+            })
 
-                const textSize = circle.particle.radius * 0.9;
-                const strokeSize = textSize * 0.1;
-
-                form.strokeOnly(color, strokeSize).point( circle.point, circle.particle.radius - (strokeSize / 2), "circle" );
-
-                const ptCenterText = Rectangle.fromCenter(circle.point, textSize);
-
-                form.strokeOnly('white', 1).rect(ptCenterText);
-
-                form.fill(color).font(textSize).alignText('center').textBox(ptCenterText, circle.game.hitPoints);
-            });
+            renderLauncherGuide();
 
             world.update(fTime);
         }
     });
 
-    space.play();
-
-
+    space.play().bindMouse().bindTouch();
 }
 
 export function addToWorld(body){
 
     world.add(body);
+}
+
+function createEdgeObject(direction, coords){
+    return {
+        direction,
+        line: Group.fromArray(coords)
+    }
 }
 
 export default {

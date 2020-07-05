@@ -40,7 +40,7 @@ function createParticle(pt, radius){
 
 function getClosestDistance(pt){
 
-    const edgeDistances = edges.map((edge) => Line.distanceFromPt(edge, pt));
+    const edgeDistances = edges.map((edge) => Line.distanceFromPt(edge.line, pt));
 
     const circleDistances = getCircles().map((circle) => {
 
